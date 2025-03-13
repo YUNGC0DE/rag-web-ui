@@ -73,8 +73,7 @@ It also provides OpenAPI interfaces for convenient knowledge base access via API
   <p><em>API Reference</em></p>
 </div>
 
- ##  Project Flowchart
- 
+ ##  Project Flowchart 
 ```mermaid
 graph TB
     %% Role Definitions

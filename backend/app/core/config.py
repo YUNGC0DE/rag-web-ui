@@ -1,5 +1,5 @@
 import os
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from pydantic_settings import BaseSettings
 
@@ -52,6 +52,11 @@ class Settings(BaseSettings):
     # DashScope settings
     DASH_SCOPE_API_KEY: str = os.getenv("DASH_SCOPE_API_KEY", "")
     DASH_SCOPE_EMBEDDINGS_MODEL: str = os.getenv("DASH_SCOPE_EMBEDDINGS_MODEL", "")
+
+    # HuggingFace Embeddings settings
+    HUGGINGFACE_EMBEDDINGS_MODEL: str = os.getenv("HUGGINGFACE_EMBEDDINGS_MODEL", "jinaai/jina-embeddings-v3")
+    HUGGINGFACE_MODEL_KWARGS: Dict[str, Any] = {"device": os.getenv("HUGGINGFACE_DEVICE", "cpu"), "trust_remote_code": True}
+    HUGGINGFACE_ENCODE_KWARGS: Dict[str, Any] = {"normalize_embeddings": True}
 
     # Vector Store settings
     VECTOR_STORE_TYPE: str = os.getenv("VECTOR_STORE_TYPE", "chroma")

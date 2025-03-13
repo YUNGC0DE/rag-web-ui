@@ -16,6 +16,9 @@ COPY requirements.txt .
 # Install Python packages
 RUN pip install --no-cache-dir -r requirements.txt
 
+# Pre-download the model files during build
+RUN python -c "from huggingface_hub import snapshot_download; snapshot_download('jinaai/jina-embeddings-v3')"
+
 # Copy entrypoint script first
 COPY entrypoint.sh .
 RUN chmod +x entrypoint.sh

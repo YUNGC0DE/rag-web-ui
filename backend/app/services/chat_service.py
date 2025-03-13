@@ -1,5 +1,6 @@
 import json
 import base64
+import logging
 from typing import List, AsyncGenerator
 from sqlalchemy.orm import Session
 from langchain_openai import ChatOpenAI
@@ -140,10 +141,15 @@ async def generate_response(
             history_aware_retriever,
             question_answer_chain,
         )
+        
+        # Log the prompts used in the chain
+        print(f"Contextualize Question Prompt: {contextualize_q_prompt.pretty_repr()}")
+        print(f"QA Prompt: {qa_prompt.pretty_repr()}")
 
         # Generate response
         chat_history = []
-        for message in messages["messages"]:
+        print(messages)
+        for message in messages["messages"][:-1]:
             if message["role"] == "user":
                 chat_history.append(HumanMessage(content=message["content"]))
             elif message["role"] == "assistant":
@@ -151,8 +157,9 @@ async def generate_response(
                 if "__LLM_RESPONSE__" in message["content"]:
                     message["content"] = message["content"].split("__LLM_RESPONSE__")[-1]
                 chat_history.append(AIMessage(content=message["content"]))
-
+        print(chat_history)
         full_response = ""
+        print(query)
         async for chunk in rag_chain.astream({
             "input": query,
             "chat_history": chat_history

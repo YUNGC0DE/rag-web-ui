@@ -36,6 +36,7 @@ def query_knowledge_base(
                 detail=f"Knowledge base {knowledge_base_id} not found",
             )
         
+        # todo вынести в ML
         embeddings = EmbeddingsFactory.create()
         
         vector_store = VectorStoreFactory.create(

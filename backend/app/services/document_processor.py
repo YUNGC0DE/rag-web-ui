@@ -211,7 +211,24 @@ async def preview_document(file_path: str, chunk_size: int = 1000, chunk_overlap
         documents = loader.load()
         text_splitter = RecursiveCharacterTextSplitter(
             chunk_size=chunk_size,
-            chunk_overlap=chunk_overlap
+            chunk_overlap=chunk_overlap,
+            separators=[
+                # Сначала пытаемся разделить по параграфам и структурным элементам
+                "\n\n\n",  # Тройной перенос строки (разделы)
+                ".",       # Обычная точка
+                "。",      # Японская/китайская точка
+                "！",      # Японский/китайский восклицательный знак
+                "!",       # Восклицательный знак
+                "？",      # Японский/китайский вопросительный знак
+                "?",       # Вопросительный знак
+                "；",      # Японская/китайская точка с запятой
+                ";",       # Точка с запятой
+                ":",       # Двоеточие
+                "，",      # Японская/китайская запятая
+                ",",       # Запятая
+                " ",      # Пробел
+                ""        # Отдельные символы
+            ],
         )
         chunks = text_splitter.split_documents(documents)
         
@@ -300,7 +317,24 @@ async def process_document_background(
             logger.info(f"Task {task_id}: Splitting document into chunks")
             text_splitter = RecursiveCharacterTextSplitter(
                 chunk_size=chunk_size,
-                chunk_overlap=chunk_overlap
+                chunk_overlap=chunk_overlap,
+                separators=[
+                    # Сначала пытаемся разделить по параграфам и структурным элементам
+                    "\n\n\n",  # Тройной перенос строки (разделы)
+                    ".",       # Обычная точка
+                    "。",      # Японская/китайская точка
+                    "！",      # Японский/китайский восклицательный знак
+                    "!",       # Восклицательный знак
+                    "？",      # Японский/китайский вопросительный знак
+                    "?",       # Вопросительный знак
+                    "；",      # Японская/китайская точка с запятой
+                    ";",       # Точка с запятой
+                    ":",       # Двоеточие
+                    "，",      # Японская/китайская запятая
+                    ",",       # Запятая
+                    " ",      # Пробел
+                    ""        # Отдельные символы
+                ],
             )
             chunks = text_splitter.split_documents(documents)
             logger.info(f"Task {task_id}: Document split into {len(chunks)} chunks")
