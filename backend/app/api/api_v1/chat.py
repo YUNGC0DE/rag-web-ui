@@ -3,7 +3,6 @@ from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.orm import Session, joinedload
 from app.db.session import get_db
-from app.models.user import User
 from app.models.chat import Chat, Message
 from app.models.knowledge import KnowledgeBase
 from app.schemas.chat import (
@@ -23,14 +22,14 @@ def create_chat(
     *,
     db: Session = Depends(get_db),
     chat_in: ChatCreate,
-    current_user: User = Depends(get_current_user)
+    current_user: int = Depends(get_current_user)
 ) -> Any:
     # Verify knowledge bases exist and belong to user
     knowledge_bases = (
         db.query(KnowledgeBase)
         .filter(
             KnowledgeBase.id.in_(chat_in.knowledge_base_ids),
-            KnowledgeBase.user_id == current_user.id
+            KnowledgeBase.user_id == current_user
         )
         .all()
     )
@@ -42,7 +41,7 @@ def create_chat(
     
     chat = Chat(
         title=chat_in.title,
-        user_id=current_user.id,
+        user_id=current_user,
     )
     chat.knowledge_bases = knowledge_bases
     
@@ -54,13 +53,13 @@ def create_chat(
 @router.get("/", response_model=List[ChatResponse])
 def get_chats(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: int = Depends(get_current_user),
     skip: int = 0,
     limit: int = 100
 ) -> Any:
     chats = (
         db.query(Chat)
-        .filter(Chat.user_id == current_user.id)
+        .filter(Chat.user_id == current_user)
         .offset(skip)
         .limit(limit)
         .all()
@@ -72,13 +71,13 @@ def get_chat(
     *,
     db: Session = Depends(get_db),
     chat_id: int,
-    current_user: User = Depends(get_current_user)
+    current_user: int = Depends(get_current_user)
 ) -> Any:
     chat = (
         db.query(Chat)
         .filter(
             Chat.id == chat_id,
-            Chat.user_id == current_user.id
+            Chat.user_id == current_user
         )
         .first()
     )
@@ -92,14 +91,14 @@ async def create_message(
     db: Session = Depends(get_db),
     chat_id: int,
     messages: dict,
-    current_user: User = Depends(get_current_user)
+    current_user: int = Depends(get_current_user)
 ) -> StreamingResponse:
     chat = (
         db.query(Chat)
         .options(joinedload(Chat.knowledge_bases))
         .filter(
             Chat.id == chat_id,
-            Chat.user_id == current_user.id
+            Chat.user_id == current_user
         )
         .first()
     )
@@ -137,13 +136,13 @@ def delete_chat(
     *,
     db: Session = Depends(get_db),
     chat_id: int,
-    current_user: User = Depends(get_current_user)
+    current_user: int = Depends(get_current_user)
 ) -> Any:
     chat = (
         db.query(Chat)
         .filter(
             Chat.id == chat_id,
-            Chat.user_id == current_user.id
+            Chat.user_id == current_user
         )
         .first()
     )

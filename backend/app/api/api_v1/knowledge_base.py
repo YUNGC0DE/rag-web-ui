@@ -12,8 +12,7 @@ import time
 import asyncio
 
 from app.db.session import get_db
-from app.models.user import User
-from app.core.security import get_current_user
+from app.api.api_v1.auth import get_current_user
 from app.models.knowledge import KnowledgeBase, Document, ProcessingTask, DocumentChunk, DocumentUpload
 from app.schemas.knowledge import (
     KnowledgeBaseCreate,
@@ -43,7 +42,7 @@ def create_knowledge_base(
     *,
     db: Session = Depends(get_db),
     kb_in: KnowledgeBaseCreate,
-    current_user: User = Depends(get_current_user)
+    current_user: int = Depends(get_current_user),
 ) -> Any:
     """
     Create new knowledge base.
@@ -51,27 +50,28 @@ def create_knowledge_base(
     kb = KnowledgeBase(
         name=kb_in.name,
         description=kb_in.description,
-        user_id=current_user.id
+        user_id=current_user
     )
     db.add(kb)
     db.commit()
     db.refresh(kb)
-    logger.info(f"Knowledge base created: {kb.name} for user {current_user.id}")
+    logger.info(f"Knowledge base created: {kb.name} for user {current_user}")
     return kb
 
 @router.get("", response_model=List[KnowledgeBaseResponse])
 def get_knowledge_bases(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user),
+    current_user: int = Depends(get_current_user),
     skip: int = 0,
     limit: int = 100
 ) -> Any:
     """
     Retrieve knowledge bases.
     """
+    print("CYKA \n\n\n", current_user)
     knowledge_bases = (
         db.query(KnowledgeBase)
-        .filter(KnowledgeBase.user_id == current_user.id)
+        .filter(KnowledgeBase.user_id == current_user)
         .offset(skip)
         .limit(limit)
         .all()
@@ -83,7 +83,7 @@ def get_knowledge_base(
     *,
     db: Session = Depends(get_db),
     kb_id: int,
-    current_user: User = Depends(get_current_user)
+    current_user: int = Depends(get_current_user),
 ) -> Any:
     """
     Get knowledge base by ID.
@@ -98,7 +98,7 @@ def get_knowledge_base(
         )
         .filter(
             KnowledgeBase.id == kb_id,
-            KnowledgeBase.user_id == current_user.id
+            KnowledgeBase.user_id == current_user
         )
         .first()
     )
@@ -114,14 +114,14 @@ def update_knowledge_base(
     db: Session = Depends(get_db),
     kb_id: int,
     kb_in: KnowledgeBaseUpdate,
-    current_user: User = Depends(get_current_user)
+    current_user: int = Depends(get_current_user),
 ) -> Any:
     """
     Update knowledge base.
     """
     kb = db.query(KnowledgeBase).filter(
         KnowledgeBase.id == kb_id,
-        KnowledgeBase.user_id == current_user.id
+        KnowledgeBase.user_id == current_user
     ).first()
     
     if not kb:
@@ -133,7 +133,7 @@ def update_knowledge_base(
     db.add(kb)
     db.commit()
     db.refresh(kb)
-    logger.info(f"Knowledge base updated: {kb.name} for user {current_user.id}")
+    logger.info(f"Knowledge base updated: {kb.name} for user {current_user}")
     return kb
 
 @router.delete("/{kb_id}")
@@ -141,7 +141,7 @@ async def delete_knowledge_base(
     *,
     db: Session = Depends(get_db),
     kb_id: int,
-    current_user: User = Depends(get_current_user)
+    current_user: int = Depends(get_current_user),
 ) -> Any:
     """
     Delete knowledge base and all associated resources.
@@ -152,7 +152,7 @@ async def delete_knowledge_base(
         db.query(KnowledgeBase)
         .filter(
             KnowledgeBase.id == kb_id,
-            KnowledgeBase.user_id == current_user.id
+            KnowledgeBase.user_id == current_user
         )
         .first()
     )
@@ -218,14 +218,14 @@ async def upload_kb_documents(
     kb_id: int,
     files: List[UploadFile],
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: int = Depends(get_current_user),
 ):
     """
     Upload multiple documents to MinIO.
     """
     kb = db.query(KnowledgeBase).filter(
         KnowledgeBase.id == kb_id,
-        KnowledgeBase.user_id == current_user.id
+        KnowledgeBase.user_id == current_user
     ).first()
     if not kb:
         raise HTTPException(status_code=404, detail="Knowledge base not found")
@@ -299,7 +299,7 @@ async def preview_kb_documents(
     kb_id: int,
     preview_request: PreviewRequest,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: int = Depends(get_current_user),
 ) -> Dict[int, PreviewResult]:
     """
     Preview multiple documents' chunks.
@@ -309,7 +309,7 @@ async def preview_kb_documents(
         document = db.query(Document).join(KnowledgeBase).filter(
             Document.id == doc_id,
             Document.knowledge_base_id == kb_id,
-            KnowledgeBase.user_id == current_user.id
+            KnowledgeBase.user_id == current_user
         ).first()
         
         if document:
@@ -318,7 +318,7 @@ async def preview_kb_documents(
             upload = db.query(DocumentUpload).join(KnowledgeBase).filter(
                 DocumentUpload.id == doc_id,
                 DocumentUpload.knowledge_base_id == kb_id,
-                KnowledgeBase.user_id == current_user.id
+                KnowledgeBase.user_id == current_user
             ).first()
             
             if not upload:
@@ -341,7 +341,7 @@ async def process_kb_documents(
     upload_results: List[dict],
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: int = Depends(get_current_user),
 ):
     """
     Process multiple documents asynchronously.
@@ -350,7 +350,7 @@ async def process_kb_documents(
     
     kb = db.query(KnowledgeBase).filter(
         KnowledgeBase.id == kb_id,
-        KnowledgeBase.user_id == current_user.id
+        KnowledgeBase.user_id == current_user
     ).first()
     
     if not kb:
@@ -433,7 +433,7 @@ async def add_processing_tasks_to_queue(task_data, kb_id):
 @router.post("/cleanup")
 async def cleanup_temp_files(
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: int = Depends(get_current_user),
 ):
     """
     Clean up expired temporary files.
@@ -464,7 +464,7 @@ async def get_processing_tasks(
     kb_id: int,
     task_ids: str = Query(..., description="Comma-separated list of task IDs to check status for"),
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: int = Depends(get_current_user),
 ):
     """
     Get status of multiple processing tasks.
@@ -473,7 +473,7 @@ async def get_processing_tasks(
     
     kb = db.query(KnowledgeBase).filter(
         KnowledgeBase.id == kb_id,
-        KnowledgeBase.user_id == current_user.id
+        KnowledgeBase.user_id == current_user
     ).first()
     
     if not kb:
@@ -508,7 +508,7 @@ async def get_document(
     db: Session = Depends(get_db),
     kb_id: int,
     doc_id: int,
-    current_user: User = Depends(get_current_user)
+    current_user: int = Depends(get_current_user),
 ) -> Any:
     """
     Get document details by ID.
@@ -519,7 +519,7 @@ async def get_document(
         .filter(
             Document.id == doc_id,
             Document.knowledge_base_id == kb_id,
-            KnowledgeBase.user_id == current_user.id
+            KnowledgeBase.user_id == current_user
         )
         .first()
     )
@@ -534,7 +534,7 @@ async def test_retrieval(
     request: TestRetrievalRequest,
     background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
+    current_user: int = Depends(get_current_user),
 ) -> Any:
     """
     Test retrieval quality for a given query against a knowledge base.
@@ -542,7 +542,7 @@ async def test_retrieval(
     try:
         kb = db.query(KnowledgeBase).filter(
             KnowledgeBase.id == request.kb_id,
-            KnowledgeBase.user_id == current_user.id
+            KnowledgeBase.user_id == current_user
         ).first()
         
         if not kb:

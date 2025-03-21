@@ -17,21 +17,6 @@ branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
 def upgrade() -> None:
-    # Create users table
-    op.create_table(
-        'users',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('email', sa.String(255), nullable=False),
-        sa.Column('username', sa.String(255), nullable=False),
-        sa.Column('hashed_password', sa.String(255), nullable=False),
-        sa.Column('is_active', sa.Boolean(), nullable=True, default=True),
-        sa.Column('is_superuser', sa.Boolean(), nullable=True, default=False),
-        sa.Column('created_at', sa.DateTime(), nullable=False),
-        sa.Column('updated_at', sa.DateTime(), nullable=False),
-        sa.PrimaryKeyConstraint('id'),
-        sa.UniqueConstraint('email'),
-        sa.UniqueConstraint('username')
-    )
 
     # Create knowledge_bases table
     op.create_table(
@@ -42,7 +27,6 @@ def upgrade() -> None:
         sa.Column('user_id', sa.Integer(), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('updated_at', sa.DateTime(), nullable=False),
-        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
 
@@ -84,7 +68,6 @@ def upgrade() -> None:
         sa.Column('user_id', sa.Integer(), nullable=False),
         sa.Column('created_at', sa.DateTime(), nullable=False),
         sa.Column('updated_at', sa.DateTime(), nullable=False),
-        sa.ForeignKeyConstraint(['user_id'], ['users.id'], ),
         sa.PrimaryKeyConstraint('id')
     )
 
@@ -145,4 +128,3 @@ def downgrade() -> None:
     op.drop_table('document_chunks')
     op.drop_table('documents')
     op.drop_table('knowledge_bases')
-    op.drop_table('users') 

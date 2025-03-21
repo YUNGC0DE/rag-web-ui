@@ -11,13 +11,12 @@ class KnowledgeBase(Base, TimestampMixin):
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(255), nullable=False)
     description = Column(LONGTEXT)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
     
     # Relationships
     documents = relationship("Document", back_populates="knowledge_base", cascade="all, delete-orphan")
-    user = relationship("User", back_populates="knowledge_bases")
     processing_tasks = relationship("ProcessingTask", back_populates="knowledge_base")
     chunks = relationship("DocumentChunk", back_populates="knowledge_base", cascade="all, delete-orphan")
     document_uploads = relationship("DocumentUpload", back_populates="knowledge_base", cascade="all, delete-orphan")

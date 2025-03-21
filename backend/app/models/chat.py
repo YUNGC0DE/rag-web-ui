@@ -16,11 +16,10 @@ class Chat(Base, TimestampMixin):
 
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255), nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    user_id = Column(Integer, nullable=False)
 
     # Relationships
     messages = relationship("Message", back_populates="chat", cascade="all, delete-orphan")
-    user = relationship("User", back_populates="chats")
     knowledge_bases = relationship(
         "KnowledgeBase",
         secondary=chat_knowledge_bases,

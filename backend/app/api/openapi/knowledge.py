@@ -6,7 +6,7 @@ from app.services.vector_store import VectorStoreFactory
 
 from app import models
 from app.db.session import get_db
-from app.core.security import get_api_key_user
+from app.api.api_v1.auth import get_current_user
 from app.core.config import settings
 from app.services.embedding.embedding_factory import EmbeddingsFactory
 
@@ -19,7 +19,7 @@ def query_knowledge_base(
     knowledge_base_id: int,
     query: str,
     top_k: int = 3,
-    current_user: models.User = Depends(get_api_key_user),
+    current_user: int = Depends(get_current_user),
 ) -> Any:
     """
     Query a specific knowledge base using API key authentication
@@ -27,7 +27,7 @@ def query_knowledge_base(
     try:
         kb = db.query(models.KnowledgeBase).filter(
             models.KnowledgeBase.id == knowledge_base_id,
-            models.KnowledgeBase.user_id == current_user.id
+            models.KnowledgeBase.user_id == current_user
         ).first()
         
         if not kb:
