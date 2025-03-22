@@ -573,3 +573,41 @@ async def test_retrieval(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
+
+@router.get("/{kb_id}/chunk/{chunk_id}")
+async def get_document_chunk(
+    *,
+    db: Session = Depends(get_db),
+    kb_id: int,
+    chunk_id: str,
+    current_user: int = Depends(get_current_user),
+) -> Any:
+    """
+    Получить текст чанка документа по ID
+    """
+    # Проверяем существование базы знаний
+    print("chunk_id", chunk_id)
+    kb = db.query(KnowledgeBase).filter(
+            KnowledgeBase.id == kb_id,
+            KnowledgeBase.user_id == current_user
+        ).first()
+    print(kb)
+    if not kb:
+        raise HTTPException(status_code=404, detail="Knowledge base not found")
+    
+    # Ищем чанк в базе данных
+    chunk = db.query(DocumentChunk).filter(
+        DocumentChunk.id == chunk_id,
+        DocumentChunk.kb_id == kb_id
+    ).first()
+    #print(chunk.chunk_metadata)
+    #print(chunk.chunk_metadata["page_content"])
+    if not chunk:
+        raise HTTPException(status_code=404, detail="Chunk not found")
+    else:
+        return {
+        "id": chunk_id,
+        "content": chunk.chunk_metadata["page_content"],
+        "metadata": ""
+    }
+   

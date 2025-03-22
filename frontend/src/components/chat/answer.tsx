@@ -21,6 +21,9 @@ import { FileIcon } from "react-file-icon";
 
 interface Citation {
   id: number;
+  ref_id: string;
+  kb_id: number;
+  document_id: number;
   text: string;
   metadata: Record<string, any>;
 }
@@ -69,16 +72,19 @@ export const Answer: FC<{
         }
 
         const handleClick = async () => {
-          if (!citation.metadata.kb_id || !citation.metadata.document_id) return;
+          if (!citation.kb_id || !citation.document_id) return;
           
           setIsLoading(true);
           setIsOpen(true);
           
           try {
-            const [kb, doc] = await Promise.all([
-              api.get(`/api/knowledge-base/${citation.metadata.kb_id}`),
-              api.get(`/api/knowledge-base/${citation.metadata.kb_id}/documents/${citation.metadata.document_id}`),
+            const [kb, doc, chunkData] = await Promise.all([
+              api.get(`/api/knowledge-base/${citation.kb_id}`),
+              api.get(`/api/knowledge-base/${citation.kb_id}/documents/${citation.document_id}`),
+              api.get(`/api/knowledge-base/${citation.kb_id}/chunk/${citation.ref_id}`),
             ]);
+
+            citation.text = chunkData.content;
 
             setCitationInfo({
               knowledge_base: {

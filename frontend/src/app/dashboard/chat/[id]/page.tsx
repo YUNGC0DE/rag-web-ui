@@ -31,6 +31,9 @@ interface Chat {
 
 interface Citation {
   id: number;
+  ref_id: string;
+  kb_id: number;
+  document_id: number;
   text: string;
   metadata: Record<string, any>;
 }
@@ -105,17 +108,22 @@ export default function ChatPage({ params }: { params: { id: string } }) {
 
           const contextData = base64Part
             ? (JSON.parse(atob(base64Part.trim())) as {
-                context: Array<{
-                  page_content: string;
+                context_refs: Array<{
+                  id: string;
+                  kb_id: number;
+                  document_id: number;
                   metadata: Record<string, any>;
                 }>;
               })
             : null;
 
           const citations: Citation[] =
-            contextData?.context.map((citation, index) => ({
+            contextData?.context_refs.map((citation, index) => ({
               id: index + 1,
-              text: citation.page_content,
+              ref_id: citation.id,
+              kb_id: citation.kb_id,
+              document_id: citation.document_id,
+              text: "", // Текст будет загружен позже, при клике
               metadata: citation.metadata,
             })) || [];
 
@@ -165,17 +173,22 @@ export default function ChatPage({ params }: { params: { id: string } }) {
 
       const contextData = base64Part
         ? (JSON.parse(atob(base64Part.trim())) as {
-            context: Array<{
-              page_content: string;
+            context_refs: Array<{
+              id: string;
+              kb_id: number;
+              document_id: number;
               metadata: Record<string, any>;
             }>;
           })
         : null;
 
       const citations: Citation[] =
-        contextData?.context.map((citation, index) => ({
+        contextData?.context_refs.map((citation, index) => ({
           id: index + 1,
-          text: citation.page_content,
+          ref_id: citation.id,
+          kb_id: citation.kb_id,
+          document_id: citation.document_id,
+          text: "", // Текст будет загружен позже, при клике
           metadata: citation.metadata,
         })) || [];
 
@@ -215,17 +228,22 @@ export default function ChatPage({ params }: { params: { id: string } }) {
 
         const contextData = base64Part
           ? (JSON.parse(atob(base64Part.trim())) as {
-              context: Array<{
-                page_content: string;
+              context_refs: Array<{
+                id: string;
+                kb_id: number;
+                document_id: number;
                 metadata: Record<string, any>;
               }>;
             })
           : null;
 
         const citations: Citation[] =
-          contextData?.context.map((citation, index) => ({
+          contextData?.context_refs.map((citation, index) => ({
             id: index + 1,
-            text: citation.page_content,
+            ref_id: citation.id,
+            kb_id: citation.kb_id,
+            document_id: citation.document_id,
+            text: "", // Текст будет загружен позже, при клике
             metadata: citation.metadata,
           })) || [];
 

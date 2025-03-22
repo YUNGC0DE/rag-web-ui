@@ -122,6 +122,10 @@ async def create_message(
             db=db
         ):
             yield chunk
+    print("\n\n\n\n\n NEW REQUEST \n\n\n\n\n")
+    print(messages)
+    print(knowledge_base_ids)
+    print(chat_id)
 
     return StreamingResponse(
         response_stream(),

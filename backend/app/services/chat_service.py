@@ -16,8 +16,8 @@ from app.services.vector_store import VectorStoreFactory
 from app.services.embedding.embedding_factory import EmbeddingsFactory
 from app.services.llm.llm_factory import LLMFactory
 
-set_verbose(True)
-set_debug(True)
+set_verbose(False)
+set_debug(False)
 
 async def generate_response(
     query: str,
@@ -148,7 +148,6 @@ async def generate_response(
 
         # Generate response
         chat_history = []
-        print(messages)
         for message in messages["messages"][:-1]:
             if message["role"] == "user":
                 chat_history.append(HumanMessage(content=message["content"]))
@@ -157,9 +156,8 @@ async def generate_response(
                 if "__LLM_RESPONSE__" in message["content"]:
                     message["content"] = message["content"].split("__LLM_RESPONSE__")[-1]
                 chat_history.append(AIMessage(content=message["content"]))
-        print(chat_history)
+        
         full_response = ""
-        print(query)
         async for chunk in rag_chain.astream({
             "input": query,
             "chat_history": chat_history
@@ -167,21 +165,28 @@ async def generate_response(
             if "context" in chunk:
                 serializable_context = []
                 for context in chunk["context"]:
+                    print(context)
+                    # Получаем только необходимые идентификаторы и метаданные
                     serializable_doc = {
-                        "page_content": context.page_content.replace('"', '\\"'),
-                        "metadata": context.metadata,
+                        "id": context.metadata.get("chunk_id", ""),  # ID чанка
+                        "kb_id": context.metadata.get("kb_id", ""),
+                        "document_id": context.metadata.get("document_id", ""),
+                        "metadata": {
+                            k: v for k, v in context.metadata.items() 
+                            if k not in ["chunk_id", "kb_id", "document_id"]
+                        }
                     }
                     serializable_context.append(serializable_doc)
                 
-                # 先替换引号，再序列化
+                # Упрощенный JSON с идентификаторами, без текста контекста
                 escaped_context = json.dumps({
-                    "context": serializable_context
+                    "context_refs": serializable_context
                 })
 
-                # 转成 base64
+                # Конвертируем в base64
                 base64_context = base64.b64encode(escaped_context.encode()).decode()
 
-                # 连接符号
+                # Соединяем
                 separator = "__LLM_RESPONSE__"
                 
                 yield f'0:"{base64_context}{separator}"\n'
