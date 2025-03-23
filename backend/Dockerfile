@@ -32,6 +32,7 @@ RUN mkdir -p uploads
 # Set Python path and environment
 ENV PYTHONPATH=/app
 ENV ENVIRONMENT=production
+RUN pip install --no-cache-dir https://github.com/mjun0812/flash-attention-prebuild-wheels/releases/download/v0.0.6/flash_attn-2.6.3+cu124torch2.6-cp311-cp311-linux_x86_64.whl
 
 # Run the application
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

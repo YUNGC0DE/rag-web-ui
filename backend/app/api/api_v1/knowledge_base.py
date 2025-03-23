@@ -68,7 +68,6 @@ def get_knowledge_bases(
     """
     Retrieve knowledge bases.
     """
-    print("CYKA \n\n\n", current_user)
     knowledge_bases = (
         db.query(KnowledgeBase)
         .filter(KnowledgeBase.user_id == current_user)
@@ -586,12 +585,11 @@ async def get_document_chunk(
     Получить текст чанка документа по ID
     """
     # Проверяем существование базы знаний
-    print("chunk_id", chunk_id)
+
     kb = db.query(KnowledgeBase).filter(
             KnowledgeBase.id == kb_id,
             KnowledgeBase.user_id == current_user
         ).first()
-    print(kb)
     if not kb:
         raise HTTPException(status_code=404, detail="Knowledge base not found")
     
@@ -600,8 +598,7 @@ async def get_document_chunk(
         DocumentChunk.id == chunk_id,
         DocumentChunk.kb_id == kb_id
     ).first()
-    #print(chunk.chunk_metadata)
-    #print(chunk.chunk_metadata["page_content"])
+
     if not chunk:
         raise HTTPException(status_code=404, detail="Chunk not found")
     else:
